@@ -53,9 +53,9 @@ while True:
             guess = int(client_input.decode().strip())
             print(f"User guess attempt: {guess}")
             if guess == guessme:
-                conn.sendall(b"Correct Answer!" + guessme)
+                conn.sendall(b"Correct Answer!")
                 break
             elif guess > guessme:
-                conn.sendall(b"\nGuess Lower!")
+                conn.sendall(b"\nGuess Lower!\n")
             else:
-                conn.sendall(b"\nGuess Higher!")
+                conn.sendall(b"\nGuess Higher!\n")

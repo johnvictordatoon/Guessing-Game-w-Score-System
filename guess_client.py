@@ -1,4 +1,3 @@
-
 # Client
 
 import socket
@@ -27,8 +26,7 @@ while True:
         break
 
     while True:
-        print("Enter Guess: ")
-        user_input = input("").strip()
+        user_input = input("Enter Guess: ").strip()
         s.sendall(user_input.encode())
         
         reply = s.recv(1024).decode().strip()
