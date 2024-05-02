@@ -5,7 +5,7 @@ import socket
 host = "localhost"
 port = 7777
 
-# initialize the socket object
+# Initialize the socket object
 s = socket.socket()
 s.connect((host, port))
 
@@ -14,11 +14,11 @@ username = input("Username: ")
 s.sendall(username.encode())
 print(f"\nWelcome, {username}!")
 
-# received the banner
+# Received the banner
 data = s.recv(1024)
 
 while True:
-    # print banner
+    # Print banner
     print("\n", data.decode().strip())
     # Let user choose the difficulty level
     difficulty = input("\nEnter your choice (a, b, c, d): ").strip().lower()
@@ -34,7 +34,7 @@ while True:
     
     # Sending the input to the server to make guess
     while True:
-        user_input = input("Enter Guess: ").strip()
+        user_input = input("\nEnter Guess: ").strip()
         s.sendall(user_input.encode())
         
         reply = s.recv(1024).decode().strip()

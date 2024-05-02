@@ -56,12 +56,23 @@ def update_score(username, difficulty, tries):
 # Display leaderboard
 def display_leaderboard():
     difficulty_mapping = {"a": "Easy", "b": "Medium", "c": "Hard"}
-    print("\n== Leaderboard ==")
-    for username, scores in sorted(player_scores.items()):
-        for difficulty, tries in sorted(scores.items(), key=lambda x: x[1]):
-            difficulty_name = difficulty_mapping.get(difficulty, "Unknown")
-            print(f"Player Name: {username}, Difficulty: {difficulty_name}, Tries: {tries}")
+    sorted_scores = []
 
+    for username, scores in player_scores.items():
+        for difficulty, tries in scores.items():
+            difficulty_name = difficulty_mapping.get(difficulty, "Unknown")
+            sorted_scores.append((username, difficulty_name, tries))
+
+    # Sort by difficulty, tries, and username (ascending order)
+    sorted_scores.sort(key=lambda x: (x[1], x[2], x[0]))
+
+    if not sorted_scores:
+        print("\nLeaderboard empty. No data yet.\n")
+    else:
+        print("\n== Leaderboard ==")
+        for username, difficulty_name, tries in sorted_scores:
+            print(f"Player Name: {username}, === Difficulty: {difficulty_name}, === Tries: {tries}")
+        
 # Initialize the socket object
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.bind((host, port))
@@ -91,6 +102,7 @@ while True:
 
         # Generates a random number based on difficulty
         guessme = generate_random_int(difficulty)
+        display_leaderboard()
         if guessme is None:
             break
         print(f"Generated number to guess: {guessme}")
@@ -104,6 +116,7 @@ while True:
             tries += 1
             if guess == guessme:
                 conn.sendall(b"Correct Answer!")
+                print(f"User {username} guessed {guessme}!")
                 update_score(username, difficulty, tries)
                 break
             elif guess > guessme:
