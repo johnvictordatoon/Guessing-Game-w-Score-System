@@ -1,7 +1,6 @@
-# Server
-
 import socket
 import random
+import json
 
 host = "localhost"
 port = 7777
@@ -18,7 +17,17 @@ d. Exit
 # Dictionary to store player scores
 player_scores = {}
 
-# Getting username to the server
+# File to store leaderboard data
+user_data_file = "leaderboard_data.json"
+
+# Load existing user data from file
+try:
+    with open(user_data_file, "r") as f:
+        player_scores = json.load(f)
+except FileNotFoundError:
+    pass
+
+# Getting username from the client
 def get_username(conn):
     username = conn.recv(1024).decode().strip()
     return username
@@ -40,16 +49,20 @@ def update_score(username, difficulty, tries):
         player_scores[username] = {}
     player_scores[username][difficulty] = tries
 
-# Sorting and displaying leaderboard from highest difficulty and less guesses to lowest difficulty and more guesses 
+    # Save updated user data to file
+    with open(user_data_file, "w") as f:
+        json.dump(player_scores, f)
+
+# Display leaderboard
 def display_leaderboard():
     difficulty_mapping = {"a": "Easy", "b": "Medium", "c": "Hard"}
-    print("\n==Leaderboard==")
+    print("\n== Leaderboard ==")
     for username, scores in sorted(player_scores.items()):
         for difficulty, tries in sorted(scores.items(), key=lambda x: x[1]):
             difficulty_name = difficulty_mapping.get(difficulty, "Unknown")
-            print(f"Player Name: {username}, === Difficulty: {difficulty_name}, === Number of Tries: {tries}\n")
+            print(f"Player Name: {username}, Difficulty: {difficulty_name}, Tries: {tries}")
 
-# initialize the socket object
+# Initialize the socket object
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.bind((host, port))
 s.listen(5)
@@ -69,14 +82,14 @@ while True:
     conn.sendall(banner.encode())
 
     while True:
-        # receive difficulty choice from the client
+        # Receive difficulty choice from the client
         difficulty = conn.recv(1024).decode().strip().lower()
         if difficulty == "d":
             print(f"{username} left the server.")
             display_leaderboard()
             break
-        
-        # Generates a random number based on difficulty and "showing" the generated number to the server (in comment)
+
+        # Generates a random number based on difficulty
         guessme = generate_random_int(difficulty)
         if guessme is None:
             break
