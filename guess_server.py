@@ -107,7 +107,7 @@ while True:
         display_leaderboard()
         if guessme is None:
             break
-        print(f"Generated number to guess: {guessme}")
+        # print(f"Generated number to guess: {guessme}") # Show generated number to the server
 
         # Guessing loop
         tries = 0
