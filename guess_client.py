@@ -20,6 +20,7 @@ data = s.recv(1024)
 while True:
     # Print banner
     print("\n", data.decode().strip())
+    
     # Let user choose the difficulty level
     difficulty = input("\nEnter your choice (a, b, c, d): ").strip().lower()
     if difficulty == "a" or difficulty == "b" or difficulty == "c":
