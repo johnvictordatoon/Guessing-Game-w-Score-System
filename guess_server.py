@@ -2,6 +2,7 @@
 
 import socket
 import random
+import json
 
 host = "localhost"
 port = 7777
@@ -18,7 +19,17 @@ d. Exit
 # Dictionary to store player scores
 player_scores = {}
 
-# Getting username to the server
+# File to store leaderboard data
+user_data_file = "leaderboard_data.json"
+
+# Load existing user data from file
+try:
+    with open(user_data_file, "r") as f:
+        player_scores = json.load(f)
+except FileNotFoundError:
+    pass
+
+# Getting username from the client
 def get_username(conn):
     username = conn.recv(1024).decode().strip()
     return username
@@ -40,16 +51,31 @@ def update_score(username, difficulty, tries):
         player_scores[username] = {}
     player_scores[username][difficulty] = tries
 
-# Sorting and displaying leaderboard from highest difficulty and less guesses to lowest difficulty and more guesses 
+    # Save updated user data to file
+    with open(user_data_file, "w") as f:
+        json.dump(player_scores, f)
+
+# Display leaderboard
 def display_leaderboard():
     difficulty_mapping = {"a": "Easy", "b": "Medium", "c": "Hard"}
-    print("\n==Leaderboard==")
-    for username, scores in sorted(player_scores.items()):
-        for difficulty, tries in sorted(scores.items(), key=lambda x: x[1]):
-            difficulty_name = difficulty_mapping.get(difficulty, "Unknown")
-            print(f"Player Name: {username}, === Difficulty: {difficulty_name}, === Number of Tries: {tries}\n")
+    sorted_scores = []
 
-# initialize the socket object
+    for username, scores in player_scores.items():
+        for difficulty, tries in scores.items():
+            difficulty_name = difficulty_mapping.get(difficulty, "Unknown")
+            sorted_scores.append((username, difficulty_name, tries))
+
+    # Sort by difficulty, tries, and username (ascending order)
+    sorted_scores.sort(key=lambda x: (x[1], x[2], x[0]))
+
+    if not sorted_scores:
+        print("\nLeaderboard empty. No data yet.\n")
+    else:
+        print("\n== Leaderboard ==")
+        for username, difficulty_name, tries in sorted_scores:
+            print(f"Player Name: {username}, === Difficulty: {difficulty_name}, === Tries: {tries}")
+        
+# Initialize the socket object
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.bind((host, port))
 s.listen(5)
@@ -69,18 +95,19 @@ while True:
     conn.sendall(banner.encode())
 
     while True:
-        # receive difficulty choice from the client
+        # Receive difficulty choice from the client
         difficulty = conn.recv(1024).decode().strip().lower()
         if difficulty == "d":
             print(f"{username} left the server.")
             display_leaderboard()
             break
-        
-        # Generates a random number based on difficulty and "showing" the generated number to the server (in comment)
+
+        # Generates a random number based on difficulty
         guessme = generate_random_int(difficulty)
+        display_leaderboard()
         if guessme is None:
             break
-        print(f"Generated number to guess: {guessme}")
+        # print(f"Generated number to guess: {guessme}") # Show generated number to the server
 
         # Guessing loop
         tries = 0
@@ -91,6 +118,7 @@ while True:
             tries += 1
             if guess == guessme:
                 conn.sendall(b"Correct Answer!")
+                print(f"User {username} guessed {guessme}!")
                 update_score(username, difficulty, tries)
                 break
             elif guess > guessme:
